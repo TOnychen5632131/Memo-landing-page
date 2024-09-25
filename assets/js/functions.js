@@ -1,19 +1,20 @@
 // @codekit-prepend "/vendor/hammer-2.0.8.js";
 
-$( document ).ready(function() {
+$(document).ready(function() {
 
-  // DOMMouseScroll included for firefox support
   var canScroll = true,
       scrollController = null;
-  $(this).on('mousewheel DOMMouseScroll', function(e){
+
+  $(document).on('wheel', function(e){
 
     if (!($('.outer-nav').hasClass('is-vis'))) {
 
       e.preventDefault();
 
-      var delta = (e.originalEvent.wheelDelta) ? -e.originalEvent.wheelDelta : e.originalEvent.detail * 20;
+      var delta = e.originalEvent.deltaY;
 
-      if (delta > 50 && canScroll) {
+      if (delta > 0 && canScroll) {
+        // Scrolling down
         canScroll = false;
         clearTimeout(scrollController);
         scrollController = setTimeout(function(){
@@ -21,7 +22,8 @@ $( document ).ready(function() {
         }, 800);
         updateHelper(1);
       }
-      else if (delta < -50 && canScroll) {
+      else if (delta < 0 && canScroll) {
+        // Scrolling up
         canScroll = false;
         clearTimeout(scrollController);
         scrollController = setTimeout(function(){
@@ -90,30 +92,40 @@ $( document ).ready(function() {
         lastItem = $('.side-nav').children().length - 1,
         nextPos = 0;
 
-    if (param.type === "swipeup" || param.keyCode === 40 || param > 0) {
-      if (curPos !== lastItem) {
-        nextPos = curPos + 1;
-        updateNavs(nextPos);
-        updateContent(curPos, nextPos, lastItem);
+    if (typeof param === 'object') {
+      if (param.type === "swipeup" || param.keyCode === 40) {
+        // Down
+        if (curPos !== lastItem) {
+          nextPos = curPos + 1;
+          updateNavs(nextPos);
+          updateContent(curPos, nextPos, lastItem);
+        }
       }
-      else {
-        updateNavs(nextPos);
-        updateContent(curPos, nextPos, lastItem);
+      else if (param.type === "swipedown" || param.keyCode === 38){
+        // Up
+        if (curPos !== 0){
+          nextPos = curPos - 1;
+          updateNavs(nextPos);
+          updateContent(curPos, nextPos, lastItem);
+        }
+      }
+    } else if (typeof param === 'number') {
+      if (param > 0) {
+        // Down
+        if (curPos !== lastItem) {
+          nextPos = curPos + 1;
+          updateNavs(nextPos);
+          updateContent(curPos, nextPos, lastItem);
+        }
+      } else if (param < 0) {
+        // Up
+        if (curPos !== 0){
+          nextPos = curPos - 1;
+          updateNavs(nextPos);
+          updateContent(curPos, nextPos, lastItem);
+        }
       }
     }
-    else if (param.type === "swipedown" || param.keyCode === 38 || param < 0){
-      if (curPos !== 0){
-        nextPos = curPos - 1;
-        updateNavs(nextPos);
-        updateContent(curPos, nextPos, lastItem);
-      }
-      else {
-        nextPos = lastItem;
-        updateNavs(nextPos);
-        updateContent(curPos, nextPos, lastItem);
-      }
-    }
-
   }
 
   // sync side and outer navigations
@@ -132,13 +144,10 @@ $( document ).ready(function() {
     $('.main-content').children().eq(nextPos).addClass('section--is-active');
     $('.main-content .section').children().removeClass('section--next section--prev');
 
-    if (curPos === lastItem && nextPos === 0 || curPos === 0 && nextPos === lastItem) {
-      $('.main-content .section').children().removeClass('section--next section--prev');
-    }
-    else if (curPos < nextPos) {
+    if (curPos < nextPos) {
       $('.main-content').children().eq(curPos).children().addClass('section--next');
     }
-    else {
+    else if (curPos > nextPos) {
       $('.main-content').children().eq(curPos).children().addClass('section--prev');
     }
 
@@ -276,5 +285,11 @@ $( document ).ready(function() {
   outerNav();
   workSlider();
   transitionLabels();
+
+  // Redirect to purchase page after form submission
+  $('.work-request').on('submit', function(e){
+    e.preventDefault();
+    window.location.href = 'https://memoai.gumroad.com/l/zefda?layout=profile';
+  });
 
 });
